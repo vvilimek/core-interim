@@ -1,0 +1,313 @@
+\documentclass{beamer}
+\usepackage{alltt}
+\title{YANG Schema iDentifier, YANG-CBOR~'instance-identifier' and similar}
+\subtitle{CoRE Interim 05}
+\author{Vojtěch Vilímek}
+\date{2026-04-22}
+
+\begin{document}
+\begin{frame}
+	\titlepage
+\end{frame}
+
+\begin{frame}
+ 	\frametitle{Topics}
+
+	\begin{itemize}
+		\item YANG-SID Issues
+		\item YANG-CBOR 'instance-identifier' draft
+		\item YANG Stand-ins
+		\item Pyang maintenance
+	\end{itemize}
+	
+\end{frame}
+
+\section{YANG-SID Issues}
+\begin{frame}[fragile]
+	\frametitle{YANG-SID Issues}
+	
+	\begin{enumerate}
+		\item SID assignment for \verb|choice| and \verb|case| schema nodes
+		
+		Already resolved at previous interim. No, there is no need for this.		
+		\item 'item' path format: Should it include \verb|choice| and \verb|case| id?
+		
+		Already resolved at previous interim. No.
+		
+		Carsten coined a NID term.
+		\item Sort order of list 'item' entries
+		
+		Non issue. Enums are sorted by their values.
+		Moreover sort order is not significant.
+		\item '.sid' File Example in RFC 9595
+		
+		With changes above only minor changes are needed.
+		
+	\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{YANG-SID Issues}
+	
+	Issues raised by Andy Bierman:
+	\begin{enumerate}
+		\item '.sid' extension was already registered
+		\item IANA SID Registery does not have any '.sid' Files
+		\item \verb|iana-if-type| has too small allocated SID range
+		\item \verb|ietf-yang-types| and \verb|ietf-inet-types| update to current RFC9911
+	\end{enumerate}
+\end{frame}
+
+
+\begin{frame}[fragile]
+	\frametitle{YANG-SID Issues}
+	
+	\begin{block}{Plan}
+	
+		\begin{itemize}
+			\item Finilize the text of erratum. Ask AD to change the old errata.
+			\item Wait for pyang implementation (upstream or \verb|core-wg| fork)
+			
+			There is a repo `ltn22/pyang`, only a partial implementation.
+			\item Populate IANA SID Registery
+		\end{itemize}
+	\end{block}
+	
+	\begin{block}{Discussion}
+	\end{block}
+	
+\end{frame}
+
+\section{YANG-CBOR 'instance-identifier' draft}
+\begin{frame}[fragile]
+	\frametitle{YANG-CBOR 'instance-identifier' draft}
+	YANG built-in type 'instance-identifier' is type for indirect references.
+	It must point to a specific instance node in data tree.
+
+\begin{verbatim}
+// file ex.yang
+container system {
+  container services {
+    container ssh {
+      leaf port { type uint16; }
+    }
+  }
+  list server {
+    key "ip port";
+    leaf ip { type inet:ip-address; }
+    leaf port { type uint16; }
+    leaf service { type string; }
+  }
+}
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+
+	\frametitle{YANG-CBOR 'instance-identifier' draft}
+\begin{verbatim}
+/* instance-identifier for a container */
+N: /ex:system/ex:services/ex:ssh (SID 1200)
+S: 1200
+
+/* instance-identifier for a leaf */
+N: /ex:system/ex:services/ex:ssh/ex:port (SID 1201)
+S: 1201
+
+/* instance-identifier for a list entry */
+N: /ex:system/ex:server[ex:ip='192.0.0.1'][ex:port='80']\
+  (SID 1230)
+S: [1230, "192.0.0.1", 80]
+
+/* instance-identifier for a leaf in a list entry */
+N: /ex:system/ex:user[ex:ip='192.0.0.1'][ex:port='80']\
+  /ex:service (SID 1237)
+S: [1237, "192.0.0.1", 80]
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{YANG-CBOR 'instance-identifier' draft}
+	Not covered cases
+\begin{verbatim}
+// file ex2.yang
+container system {
+  list logged-users {
+    config false;
+    // no key stmt;
+    leaf name { type string; }
+    leaf number-of-sessions { type uint32; }
+  }
+  leaf-list if-names { type string; }
+  leaf-list measurements { type uint64; }
+}
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{YANG-CBOR 'instance-identifier' draft}
+Proposed YANG-CBOR encoding using SIDs:
+
+\begin{verbatim}
+/* instance-identifier for a list entry with two keys */
+N: /ex2:system/ex2:logged-users[2] (SID 1241)
+draft S: [1241, 2]
+
+/* instance-identifier for a leaf-list entry */
+N: /ex2:system/ex2:if-names[.='eth0'] (SID 1260)
+draft S: [1260, "eth0"]
+
+N: /ex2:system/ex2:measurements[.='1440'] (SID 1261)
+draft S: [1261, 1440]
+\end{verbatim}
+
+For more details see draft text.
+\end{frame}
+
+\section{Intermezzo}
+\begin{frame}[fragile]
+	\frametitle{Intermezzo}
+\begin{verbatim}
+container system {
+  list users {
+    key "name";
+    leaf name { type string; }
+    leaf type { type string; /* admin, normal, ... */ }
+    leaf created-at { type yang:date-and-time; }
+  }
+}
+\end{verbatim}
+YANG 'instance-identifier's
+\begin{verbatim}
+/ex:system
+/ex:system/ex:users[ex:name="Vojtech"]
+/ex:system/ex:users[ex:name="Vojtech"]/type
+
+/ex:system/ex:users // NOT VALID !!
+\end{verbatim}
+\end{frame}
+
+\section{YANG Stand-ins}
+\begin{frame}[fragile]
+	\frametitle{YANG Stand-ins}
+	
+	Most of YANG types are based on string built-in type.
+	This is not ideal for constrained environments.
+	We create an optimalization for types that have more natural and/or efficient 
+	representation in CBOR.
+	
+	Examples:
+	
+	\verb|ip4-address|, \verb|ip6-address|, \verb|uuid|, \verb|mac-address|, \verb|date|, \verb|date-and-time|.
+
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{YANG Stand-ins}
+	
+	\begin{block}{Standin file}
+	\begin{verbatim}
+module ietf-cbor-standin-file { container standin-file {
+  list encoding {
+  config false;
+    leaf standin { type identityref; }
+    choice encoding-variant {
+      list types { key "type"; leaf type { type string; }}
+      list sids { key "sid"; leaf sid { type sid:sid; }}
+    }
+  }
+} }
+	\end{verbatim}
+	\end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]
+	\frametitle{YANG Stand-ins}
+	
+	PR: \#15
+	
+	Encode simple cases of \verb|enumeration| and \verb|bits| inside \verb|union|
+	as CBOR unsigned integers.
+	Only if the values are unique.
+\begin{verbatim}
+leaf unioned {
+  type union {
+    type string;
+    type enumeration { enum first; enum second; enum third; }
+    type bits { bit b1; bit b2; bit b3; }  
+  }
+}
+\end{verbatim}
+
+\begin{verbatim}
+OLD                 NEW
+"string-value"      "string-value"
+"first"             44(0)
+"b1 b3"             43(b"3")
+\end{verbatim}
+		
+\end{frame}
+
+\section{Pyang maintenance}
+\begin{frame}[fragile]
+	\frametitle{Pyang maintenance}
+	GitHub repo \verb|core-wg/pyang| has some pending PRs.
+	
+	\begin{itemize}
+	  \item \#20 '.sid' File description field
+	  \item \#22 Core fix submod name
+	  \item \#23 Unify updated 'dependency-revision' list
+	\end{itemize}
+	Code of all PRs is already merged into upstream master and will be part in
+	next version of pyang.
+
+	Also there is a lot of open issues that was already been fixed.
+	
+	More work to be done.
+\end{frame}
+
+\section{Misc}
+\begin{frame}
+	\frametitle{CORECONF}
+
+	\begin{block}{Section 3.4 Event stream}
+	Reception of notification instances is enabled with the CoAP Observe [RFC7641] function. Clients subscribe to the notifications by sending a GET request with an "Observe" option to the stream resource.
+	
+	Each response payload carries one or multiple notifications. The number of notifications reported, and the conditions used to remove notifications from the reported list are left to implementers...
+	\end{block}
+
+	\medskip
+	Idea: Add text for HPC? like allow TCP transport in the doc. explicitly.
+\end{frame}
+
+\begin{frame}
+	\frametitle{CORECONF}
+
+	\begin{block}{Data tree walking}
+	\begin{itemize}
+		\item Instance data (instaces in the data tree) discovery. Currently the draft allows only
+		for schema tree discovery.
+	
+		\item Andy Bierman wrote on the mailing list that instance discovery is (huge) problem
+		in for the RESTCONF protocol.
+	
+		\item netmod/netconf WG are working on list pagination draft. Basicaly possibility for 
+		iterator creation for list nodes.
+	
+		\item RESTCONF has ability to create filter selecting only specified fields of given 				container/list.
+	\end{itemize}
+	\end{block}
+\end{frame}
+
+\section{Conclusion}
+\begin{frame}
+	\begin{block}{Misc discussion}
+	\end{block}
+	
+	\begin{block}{Thanks for your attention}
+	\end{block}
+\end{frame}
+
+
+\end{document}
