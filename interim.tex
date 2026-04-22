@@ -5,6 +5,12 @@
 \author{Vojtěch Vilímek}
 \date{2026-04-22}
 
+% source: https://tex.stackexchange.com/questions/137022/how-to-insert-page-number-in-beamer-navigation-symbols
+\setbeamertemplate{sidebar right}{}
+\setbeamertemplate{footline}{%
+\hfill\usebeamertemplate***{navigation symbols}
+\hspace{1cm}\insertframenumber{}/\inserttotalframenumber}
+
 \hypersetup {
   colorlinks=true,
   urlcolor=MidnightBlue,
@@ -117,21 +123,21 @@ container system {
 	\frametitle{YANG--CBOR 'instance-identifier' draft}
 \begin{verbatim}
 /* instance-identifier for a container */
-N: /ex:system/ex:services/ex:ssh (SID 1200)
+N: /ex:system/services/ssh (SID 1200)
 S: 1200
 
 /* instance-identifier for a leaf */
-N: /ex:system/ex:services/ex:ssh/ex:port (SID 1201)
+N: /ex:system/services/ssh/port (SID 1201)
 S: 1201
 
 /* instance-identifier for a list entry */
-N: /ex:system/ex:server[ex:ip='192.0.0.1'][ex:port='80']\
+N: /ex:system/server[ip='192.0.0.1'][port='80']\
   (SID 1230)
 S: [1230, "192.0.0.1", 80]
 
 /* instance-identifier for a leaf in a list entry */
-N: /ex:system/ex:user[ex:ip='192.0.0.1'][ex:port='80']\
-  /ex:service (SID 1237)
+N: /ex:system/user[ip='192.0.0.1'][port='80']\
+  /service (SID 1237)
 S: [1237, "192.0.0.1", 80]
 \end{verbatim}
 \end{frame}
@@ -160,14 +166,14 @@ Proposed YANG--CBOR encoding using SIDs:
 
 \begin{verbatim}
 /* instance-identifier for a list entry with two keys */
-N: /ex2:system/ex2:logged-users[2] (SID 1241)
+N: /ex2:system/logged-users[2] (SID 1241)
 draft S: [1241, 2]
 
 /* instance-identifier for a leaf-list entry */
-N: /ex2:system/ex2:if-names[.='eth0'] (SID 1260)
+N: /ex2:system/if-names[.='eth0'] (SID 1260)
 draft S: [1260, "eth0"]
 
-N: /ex2:system/ex2:measurements[.='1440'] (SID 1261)
+N: /ex2:system/measurements[.='1440'] (SID 1261)
 draft S: [1261, 1440]
 \end{verbatim}
 
@@ -292,7 +298,9 @@ OLD                 NEW
 
 \begin{frame}
   \frametitle{CORECONF}
-  Idea: Add text for HPC? like allow TCP transport in the doc. explicitly.
+  Idea: Add text for High Performance Computing? like allow TCP transport in the doc. explicitly.
+
+  There are different requirements but I think they lead to similar design decisions.
 \end{frame}
 
 \begin{frame}
