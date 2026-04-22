@@ -1,9 +1,14 @@
 \documentclass{beamer}
-\usepackage{alltt}
+\usepackage[dvipsnames]{xcolor}
 \title{YANG Schema iDentifier, YANG-CBOR~'instance-identifier' and similar}
 \subtitle{CoRE Interim 05}
 \author{Vojtěch Vilímek}
 \date{2026-04-22}
+
+\hypersetup {
+  colorlinks=true,
+  urlcolor=MidnightBlue,
+}
 
 \begin{document}
 \begin{frame}
@@ -14,62 +19,67 @@
  	\frametitle{Topics}
 
 	\begin{itemize}
-		\item YANG-SID Issues
-		\item YANG-CBOR 'instance-identifier' draft
+		\item YANG--SID Issues
+		\item YANG--CBOR 'instance-identifier' draft
 		\item YANG Stand-ins
 		\item Pyang maintenance
+		\item CORECONF
 	\end{itemize}
 	
 \end{frame}
 
-\section{YANG-SID Issues}
+\section{YANG--SID Issues}
 \begin{frame}[fragile]
-	\frametitle{YANG-SID Issues}
+	\frametitle{YANG--SID Issues}
 	
 	\begin{enumerate}
 		\item SID assignment for \verb|choice| and \verb|case| schema nodes
 		
-		Already resolved at previous interim. No, there is no need for this.		
+		Already resolved at \href{https://youtu.be/C8RaX4XCRvE}{previous interim}. No, there is no need for this.		
 		\item 'item' path format: Should it include \verb|choice| and \verb|case| id?
 		
-		Already resolved at previous interim. No.
+		Already resolved at \href{https://youtu.be/C8RaX4XCRvE}{previous interim}. No.
 		
 		Carsten coined a NID term.
 		\item Sort order of list 'item' entries
 		
 		Non issue. Enums are sorted by their values.
 		Moreover sort order is not significant.
-		\item '.sid' File Example in RFC 9595
+	        \item '.sid' File Example in \href{https://datatracker.ietf.org/doc/rfc9595/}{RFC9595}
 		
-		With changes above only minor changes are needed.
-		
+		With changes above only changes needed: some \verb|rpc|/\verb|action|
+		miss the \verb|input| and \verb|output| node SID assignment.
+	
 	\end{enumerate}
 \end{frame}
 
 \begin{frame}[fragile]
-	\frametitle{YANG-SID Issues}
+	\frametitle{YANG--SID Issues}
 	
 	Issues raised by Andy Bierman:
 	\begin{enumerate}
 		\item '.sid' extension was already registered
-		\item IANA SID Registery does not have any '.sid' Files
-		\item \verb|iana-if-type| has too small allocated SID range
-		\item \verb|ietf-yang-types| and \verb|ietf-inet-types| update to current RFC9911
+		\item \href{https://www.iana.org/assignments/yang-sid/yang-sid.xhtml#ietf-yang-sid-modules}{IANA SID Registery} does not have any '.sid' Files
+		\item \verb|iana-if-type| \href{https://mailarchive.ietf.org/arch/msg/yang-tooling/Sr-AMBFO-WBoHcIog7iaMDqS2I4/}{has too small SID range allocated}
+		\item \verb|ietf-yang-types| and \verb|ietf-inet-types| update to current \href{https://datatracker.ietf.org/doc/html/rfc9911}{RFC9911}
+		\item YANG Doctor review for entries of IANA YANG SID Registory
+		\item remove \verb|ietf-coreconf| reference from entry for RFC9595
 	\end{enumerate}
+
 \end{frame}
 
 
 \begin{frame}[fragile]
-	\frametitle{YANG-SID Issues}
+	\frametitle{YANG--SID Issues}
 	
 	\begin{block}{Plan}
 	
 		\begin{itemize}
-			\item Finilize the text of erratum. Ask AD to change the old errata.
+			\item Finalize the text of the erratum. Ask AD to change the \href{https://www.rfc-editor.org/errata/eid8629}{old errata (EID 8629)}.
 			\item Wait for pyang implementation (upstream or \verb|core-wg| fork)
 			
-			There is a repo `ltn22/pyang`, only a partial implementation.
-			\item Populate IANA SID Registery
+			There is a repo \href{https://github.com/ltn22/pyang}{`ltn22/pyang`}, only a partial implementation.
+			\item Populate \href{https://www.iana.org/assignments/yang-sid/yang-sid.xhtml#ietf-yang-sid-modules}{IANA SID Registery}
 		\end{itemize}
 	\end{block}
 	
@@ -78,9 +88,9 @@
 	
 \end{frame}
 
-\section{YANG-CBOR 'instance-identifier' draft}
+\section{YANG--CBOR 'instance-identifier' draft}
 \begin{frame}[fragile]
-	\frametitle{YANG-CBOR 'instance-identifier' draft}
+	\frametitle{YANG--CBOR 'instance-identifier' draft}
 	YANG built-in type 'instance-identifier' is type for indirect references.
 	It must point to a specific instance node in data tree.
 
@@ -104,7 +114,7 @@ container system {
 
 \begin{frame}[fragile]
 
-	\frametitle{YANG-CBOR 'instance-identifier' draft}
+	\frametitle{YANG--CBOR 'instance-identifier' draft}
 \begin{verbatim}
 /* instance-identifier for a container */
 N: /ex:system/ex:services/ex:ssh (SID 1200)
@@ -127,7 +137,7 @@ S: [1237, "192.0.0.1", 80]
 \end{frame}
 
 \begin{frame}[fragile]
-	\frametitle{YANG-CBOR 'instance-identifier' draft}
+	\frametitle{YANG--CBOR 'instance-identifier' draft}
 	Not covered cases
 \begin{verbatim}
 // file ex2.yang
@@ -145,8 +155,8 @@ container system {
 \end{frame}
 
 \begin{frame}[fragile]
-	\frametitle{YANG-CBOR 'instance-identifier' draft}
-Proposed YANG-CBOR encoding using SIDs:
+	\frametitle{YANG--CBOR 'instance-identifier' draft}
+Proposed YANG--CBOR encoding using SIDs:
 
 \begin{verbatim}
 /* instance-identifier for a list entry with two keys */
@@ -161,7 +171,7 @@ N: /ex2:system/ex2:measurements[.='1440'] (SID 1261)
 draft S: [1261, 1440]
 \end{verbatim}
 
-For more details see draft text.
+For more details see \href{https://datatracker.ietf.org/doc/draft-vilimek-yang-cbor-inst-id/}{draft text}.
 \end{frame}
 
 \section{Intermezzo}
@@ -200,6 +210,8 @@ YANG 'instance-identifier's
 	
 	\verb|ip4-address|, \verb|ip6-address|, \verb|uuid|, \verb|mac-address|, \verb|date|, \verb|date-and-time|.
 
+	All currently considered types are in \href{https://datatracker.ietf.org/doc/draft-bormann-cbor-yang-standin/}{draft text}.
+
 \end{frame}
 
 \begin{frame}[fragile]
@@ -225,7 +237,7 @@ module ietf-cbor-standin-file { container standin-file {
 \begin{frame}[fragile]
 	\frametitle{YANG Stand-ins}
 	
-	PR: \#15
+	PR: \href{https://github.com/cabo/yang-standin/pull/15}{\#15}
 	
 	Encode simple cases of \verb|enumeration| and \verb|bits| inside \verb|union|
 	as CBOR unsigned integers.
@@ -244,9 +256,8 @@ leaf unioned {
 OLD                 NEW
 "string-value"      "string-value"
 "first"             44(0)
-"b1 b3"             43(b"3")
+"b1 b3"             43(h'05')
 \end{verbatim}
-		
 \end{frame}
 
 \section{Pyang maintenance}
@@ -255,14 +266,14 @@ OLD                 NEW
 	GitHub repo \verb|core-wg/pyang| has some pending PRs.
 	
 	\begin{itemize}
-	  \item \#20 '.sid' File description field
-	  \item \#22 Core fix submod name
-	  \item \#23 Unify updated 'dependency-revision' list
+	  \item \href{https://github.com/core-wg/pyang/pull/20}{\#20} '.sid' File description field
+	  \item \href{https://github.com/core-wg/pyang/pull/22}{\#22} Core fix submod name
+	  \item \href{https://github.com/core-wg/pyang/pull/23}{\#23} Unify updated 'dependency-revision' list
 	\end{itemize}
-	Code of all PRs is already merged into upstream master and will be part in
+	Code of all PRs is already merged into upstream master and will be part of
 	next version of pyang.
 
-	Also there is a lot of open issues that was already been fixed.
+	Also there are a lot of open issues that was already been fixed.
 	
 	More work to be done.
 \end{frame}
@@ -271,14 +282,17 @@ OLD                 NEW
 \begin{frame}
 	\frametitle{CORECONF}
 
-	\begin{block}{Section 3.4 Event stream}
-	Reception of notification instances is enabled with the CoAP Observe [RFC7641] function. Clients subscribe to the notifications by sending a GET request with an "Observe" option to the stream resource.
+	\begin{block}{\href{https://www.ietf.org/archive/id/draft-ietf-core-comi-21.html\#name-event-stream}{Section 3.4 Event stream}}
+	  Reception of notification instances is enabled with the CoAP Observe [\href{https://datatracker.ietf.org/doc/html/rfc7641}{RFC7641}]
+	  function. Clients subscribe to the notifications by sending a GET request with an "Observe" option to the stream resource.
 	
-	Each response payload carries one or multiple notifications. The number of notifications reported, and the conditions used to remove notifications from the reported list are left to implementers...
+	  \textbf{Each response payload carries one or multiple notifications}. The number of notifications reported, and the conditions used to remove notifications from the reported list are left to implementers...
 	\end{block}
+\end{frame}
 
-	\medskip
-	Idea: Add text for HPC? like allow TCP transport in the doc. explicitly.
+\begin{frame}
+  \frametitle{CORECONF}
+  Idea: Add text for HPC? like allow TCP transport in the doc. explicitly.
 \end{frame}
 
 \begin{frame}
@@ -289,13 +303,16 @@ OLD                 NEW
 		\item Instance data (instaces in the data tree) discovery. Currently the draft allows only
 		for schema tree discovery.
 	
-		\item Andy Bierman wrote on the mailing list that instance discovery is (huge) problem
+	      \item I wrote on the mailing list that this is a problem. 
+		\href{https://mailarchive.ietf.org/arch/msg/core/WmnnQGibr3KLyGIO2NWiabs6l4A/}{Andy Bierman eventualy agreed}
+		with me that instance discovery is problem
 		in for the RESTCONF protocol.
 	
-		\item netmod/netconf WG are working on list pagination draft. Basicaly possibility for 
+		\item netmod/netconf WG are working on list pagination draft. A possibility for 
 		iterator creation for list nodes.
 	
-		\item RESTCONF has ability to create filter selecting only specified fields of given 				container/list.
+		\item RESTCONF has ability to create filter selecting only specified fields of given
+		container/list. 
 	\end{itemize}
 	\end{block}
 \end{frame}
@@ -308,6 +325,5 @@ OLD                 NEW
 	\begin{block}{Thanks for your attention}
 	\end{block}
 \end{frame}
-
 
 \end{document}
