@@ -1,0 +1,294 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage{array}
+%\usepackage{dirtytalk}
+\usepackage[dvipsnames]{xcolor}
+\title{IANA YANG~SIDs Registry, Constrained~YANG~Library, Unified~Datastore}
+\subtitle{CoRE Interim 07}
+\author{Vojtěch Vilímek}
+\date{2026-05-20}
+
+% source: https://tex.stackexchange.com/questions/137022/how-to-insert-page-number-in-beamer-navigation-symbols
+\setbeamertemplate{sidebar right}{}
+\setbeamertemplate{footline}{%
+\hfill\usebeamertemplate***{navigation symbols}
+\hspace{1cm}\insertframenumber{}/\inserttotalframenumber}
+
+\hypersetup {
+  colorlinks=true,
+  urlcolor=MidnightBlue,
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}
+  \frametitle{Agenda}
+
+  \begin{itemize}
+    \item IANA YANG SIDs Registry
+    \item Constrained YANG Library
+    \item Unified Datastore Semantics
+    \item PYCORECONF Discussion
+  \end{itemize}	
+\end{frame}
+
+\section{IANA YANG SIDs Registry}
+\begin{frame}
+  \frametitle{IANA YANG SIDs Registry} 
+
+  \begin{block}{\href{https://mailarchive.ietf.org/arch/msg/yang-tooling/Sr-AMBFO-WBoHcIog7iaMDqS2I4/}{Andy Bierman's comments}}
+    \begin{itemize}
+      \item no YANG Doctors review established for .sid Files (or YD experts review).
+      \item iana-if-types: allocation too small
+      \vspace{0.3em}
+
+      SID range has 400 numbers, allocation for revision 2026-03-17 leaving 94 SIDs unassigned.
+
+      Andy would like to have 10000 SID range.
+
+      Could be solved by additional SID range when necessary.
+
+      \item ietf-system, \href{https://datatracker.ietf.org/doc/html/rfc9595}{RFC9595} example is not correct
+      RFC9595 .sid file example should not be considered normative.
+
+      \item ietf-yang-types and ietf-inet-types: old reference to 
+      \href{https://datatracker.ietf.org/doc/html/rfc6991}{RFC6991} not \href{https://datatracker.ietf.org/doc/html/rfc9911}{RFC9911} -- Fixed
+
+      \item (NIT) ietf-coreconf entry has reference to RFC9595.
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \frametitle{IANA YANG SIDs Registry}
+  \href{https://www.iana.org/assignments/yang-sid/yang-sid.xhtml}{Link.}
+
+  Errata wording then Registry population.
+
+  General: Should we use size 50 for typedef only modules?
+
+  \vspace{0.3em}
+  \begin{quote}
+    File ietf-yang-types@2025-12-22.sid created
+
+    Number of SIDs available : 50
+
+      Number of SIDs used : 1
+  \end{quote}
+
+  \vspace{1em}
+  \begin{quote}
+    File ietf-inet-types@2025-12-22.sid created
+
+    Number of SIDs available : 40
+
+    Number of SIDs used : 1
+  \end{quote}
+\end{frame}
+
+\begin{frame}
+  \frametitle{IANA YANG SIDs Registry}
+
+  Should we consider automatic output as good enough for standard .sid files?
+
+  \vspace{1em}
+  Current modules in registry: 
+
+    iana-crypt-hash, iana-if-types, ietf-coreconf, ietf-ient-types, ietf-interfaces,
+    ietf-ip, ietf-netconf-acm, ietf-schc, ietf-sid-file, ietf-system,
+    ietf-voucher-request, ietf-voucher, ietf-yang-types
+
+  \vspace{1em} 
+  Why ietf-sid-file? Only standardized encoding is JSON.
+\end{frame}
+
+\section{Constrained YANG Library}
+\begin{frame}[fragile]
+  \frametitle{Constrained YANG Library}
+
+\begin{verbatim}
+// file ietf-constrained-yang-library.yang
+  list import-only-module {
+    key "identifier revision";
+    leaf revision {
+      type union {
+      type revision-identifier;
+        type string; // would not be empty better?
+          legnth 0;
+        }
+      }
+      description
+        "The YANG module revision date.";
+    }
+  }
+\end{verbatim}
+
+  Need to allocate SID range, and create .sid File.
+\end{frame}
+
+
+\section{Unified DS Semantics}
+\begin{frame}[fragile]
+  \frametitle{Unified Datastore Semantics}
+  \begin{block}{2.4.  Unified datastore}
+
+CORECONF supports a simple datastore model consisting of 
+a single unified datastore.  This datastore provides 
+access to both configuration and operational data.  
+Configuration updates performed on this datastore are 
+reflected immediately or with a minimal delay as 
+operational data.
+
+More complex datastore models such as the Network 
+Management Datastore Architecture (NMDA) as defined 
+by [\href{https://datatracker.ietf.org/doc/html/rfc8342}{RFC8342}] are out of scope of the present
+specification.
+  \end{block}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Unified Datastore Semantics}
+Characteristics of the unified datastore are summarized in the table
+below:
+
+  \vspace{1em}
+  \begin{tabular}{ | l | l | }
+    \hline
+    \textbf{Name}         &  \textbf{Value} \\ 
+    \hline
+    Name         &  unified \\
+    \hline
+    YANG modules &  all modules \\
+    \hline
+    YANG nodes   & all data nodes ("config true" and "config false") \\
+    \hline
+    Access       & read-write \\
+    \hline
+    How applied  &  changes applied in place immediately or with a    
+                    minimal delay \\
+    \hline
+    Protocols    & CORECONF \\
+    \hline
+    Defined in   & "ietf-coreconf" \\
+    \hline
+  \end{tabular}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Unified Datastore Semantics}
+
+  \newlength{\fNameWidth}
+  \settowidth{\fNameWidth}{YANG modules}
+  \newlength{\fValueWidth}
+  \settowidth{\fValueWidth}{chagnes applied in place immediately or with minimal delay}
+  \begin{tabular}{ | m{\fNameWidth} | m{\fValueWidth} | }
+    \hline
+    Access & read-write \\
+    \hline
+  \end{tabular}
+  \vspace{0.5em}
+
+  Are all data nodes read-write, or just the "config true"? The "config false" are read-only.
+
+  \vspace{1em}
+  \begin{tabular}{ | m{\fNameWidth} | m{\fValueWidth} | }
+    \hline
+    How applied & changes applied in place immediately or with a
+                  minimal delay \\
+    \hline
+  \end{tabular}
+  \vspace{0.5em}
+
+  Do I have two value, where the "config true" shadows the "config false", or just one value?  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Unified Datastore Semantics}
+
+  \begin{block}{Consistency}
+    Operational data are always changing.
+
+    For more complex queries, data consistency may be broken during message processing.
+
+    Also for iPATCH requests, rollback functionality is requered for two-or-more
+    elements of CBOR sequence.
+
+    \vspace{1em}
+    Isn't the rollback too resource heavy for the constrained environment?
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{CORECONF Consistency}
+
+  \begin{block}{Examples}
+\footnotesize \begin{verbatim}
+REQ: FETCH </c>  (Content-Format: application/yang-identifiers+cbor-seq)
+[1533, "eth0"]   / interface (SID 1533) with name = "eth0" /
+1723,            / current-datetime (SID 1723) /
+
+RES: 2.05 Content  (Content-Format: application/yang-instances+cbor-seq)
+{
+  1533 : {
+     4 : "eth0",              / name (SID 1537) /
+    13 : "referenced-value"    / leafref to 1723 /
+  }
+}
+/ in the meantime the instance 1723 caesed to exist /
+{
+  1723 : null          / current-datetime (SID 1723) /
+},
+\end{verbatim}
+  \end{block}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{CORECONF Consistency}
+
+  \begin{block}{Examples}
+\footnotesize \begin{verbatim}
+REQ: iPATCH </c>   (Content-Format: application/yang-instances+cbor-seq)
+{  1755 : true  }                / enabled (SID 1755) /
+[  "obvious", "error" ]
+{  1756 : {                      / server (SID 1756)  /
+     3 : "tic.nrc.ca",           / name (SID 1759)    /
+     4 : true,                   / prefer (SID 1760)  /
+     5 : {                       / udp (SID 1761)     /
+       1 : "132.246.11.231" }    / address (SID 1762) /
+}  }
+
+RES: 4.00 Bad Request
+{ 1025: {
+    4: 1019  / error-tag     (SID 1029) -> operation-failed  (SID 1019) /
+    1: 1012  / error-app-tag (SID 1026) -> malformed-message (SID 1012) /
+    3: "Expected map, got array"    / error-message (SID 1028) /
+  }
+}
+\end{verbatim}
+  \end{block}
+\end{frame}
+
+
+\section{PYCORECONF Discussion}
+\begin{frame}
+  \begin{block}{PYCORECONF Discussion}
+    \begin{itemize}
+      \item YANG-oblivious process
+      \item all built-in types
+      \item typedefs
+      \item maybe work on sid-file-ext.yang?
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}
+  \begin{block}{PYCORECONF Discussion}
+  \end{block}
+\end{frame}
+
+\end{document}
